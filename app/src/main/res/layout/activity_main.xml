@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     android:background="#000000">
 
+    <!-- Vista de cámara OpenCV -->
     <org.opencv.android.JavaCamera2View
         android:id="@+id/camera_view"
         android:layout_width="match_parent"
@@ -11,22 +12,55 @@
         android:layout_above="@+id/btn_layout"
         android:visibility="visible" />
 
+    <!-- Vista de galería -->
     <ImageView
         android:id="@+id/gallery_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/btn_layout"
-        android:scaleType="centerCrop"
+        android:scaleType="fitCenter"
         android:contentDescription="Gallery Image"
         android:visibility="gone" />
 
+    <!-- Etiqueta del modo actual (esquina superior izquierda) -->
+    <TextView
+        android:id="@+id/tv_mode_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_margin="12dp"
+        android:padding="6dp"
+        android:background="#99000000"
+        android:text="Modo: Normal"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <!-- Total de dinero detectado (solo visible en modo dinero) -->
+    <TextView
+        android:id="@+id/tv_total_money"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/btn_layout"
+        android:layout_margin="12dp"
+        android:padding="10dp"
+        android:background="#CC004400"
+        android:gravity="center"
+        android:text="Total: $0"
+        android:textColor="#00FF88"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <!-- Barra de botones inferior -->
     <LinearLayout
         android:id="@+id/btn_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:background="#80000000"
-        android:padding="16dp"
+        android:padding="10dp"
         android:orientation="horizontal">
 
         <Button
@@ -34,7 +68,7 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:text="Cam/Gal" />
 
         <Button
@@ -42,7 +76,7 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:layout_marginHorizontal="4dp"
             android:text="Girar Cam" />
 
@@ -51,7 +85,8 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:text="Filtro" />
+
     </LinearLayout>
 </RelativeLayout>

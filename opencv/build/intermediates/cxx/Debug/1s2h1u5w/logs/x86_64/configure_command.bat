@@ -1,6 +1,6 @@
 @echo off
 "C:\\Users\\user\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\cmake.exe" ^
-  "-HC:\\Users\\user\\OneDrive\\Escritorio\\parcial corte1 vision\\opencv\\libcxx_helper" ^
+  "-HC:\\Users\\user\\OneDrive\\Escritorio\\UNIVERSIDAD\\semestre 8\\parcial corte1 vision\\opencv\\libcxx_helper" ^
   "-DCMAKE_SYSTEM_NAME=Android" ^
   "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" ^
   "-DCMAKE_SYSTEM_VERSION=21" ^
@@ -11,9 +11,9 @@
   "-DCMAKE_ANDROID_NDK=C:\\Users\\user\\AppData\\Local\\Android\\Sdk\\ndk\\27.0.12077973" ^
   "-DCMAKE_TOOLCHAIN_FILE=C:\\Users\\user\\AppData\\Local\\Android\\Sdk\\ndk\\27.0.12077973\\build\\cmake\\android.toolchain.cmake" ^
   "-DCMAKE_MAKE_PROGRAM=C:\\Users\\user\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe" ^
-  "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=C:\\Users\\user\\OneDrive\\Escritorio\\parcial corte1 vision\\opencv\\build\\intermediates\\cxx\\Debug\\1s2h1u5w\\obj\\x86_64" ^
-  "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=C:\\Users\\user\\OneDrive\\Escritorio\\parcial corte1 vision\\opencv\\build\\intermediates\\cxx\\Debug\\1s2h1u5w\\obj\\x86_64" ^
+  "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=C:\\Users\\user\\OneDrive\\Escritorio\\UNIVERSIDAD\\semestre 8\\parcial corte1 vision\\opencv\\build\\intermediates\\cxx\\Debug\\1s2h1u5w\\obj\\x86_64" ^
+  "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=C:\\Users\\user\\OneDrive\\Escritorio\\UNIVERSIDAD\\semestre 8\\parcial corte1 vision\\opencv\\build\\intermediates\\cxx\\Debug\\1s2h1u5w\\obj\\x86_64" ^
   "-DCMAKE_BUILD_TYPE=Debug" ^
-  "-BC:\\Users\\user\\OneDrive\\Escritorio\\parcial corte1 vision\\opencv\\.cxx\\Debug\\1s2h1u5w\\x86_64" ^
+  "-BC:\\Users\\user\\OneDrive\\Escritorio\\UNIVERSIDAD\\semestre 8\\parcial corte1 vision\\opencv\\.cxx\\Debug\\1s2h1u5w\\x86_64" ^
   -GNinja ^
   "-DANDROID_STL=c++_shared"
