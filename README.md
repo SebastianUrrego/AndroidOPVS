@@ -1,130 +1,280 @@
-# Parcial 1 - Filtros OpenCV
-### Vision por computador
-### Universidad Sergio Arboleda
+# App Vision por Computador
+### Vision por Computador
+### Universidad Sergio Arboleda  
 ### Bryan Ariza y Sebastian Urrego
 
 Aplicación Android desarrollada en **Kotlin + C++ (NDK)** que integra **OpenCV 4.12.0** para procesamiento de imágenes en tiempo real desde la cámara y desde la galería del dispositivo.
 
+El proyecto fue desarrollado como solución al **Examen Práctico del Tercer Corte** de la materia de Visión por Computador.
+
 ---
 
-## Requisitos previos
+# Objetivos del parcial
+
+El examen práctico solicitaba desarrollar dos funcionalidades principales:
+
+1. Crear una aplicación Android que detecte rostros usando el modelo **Haar Features - Viola Jones** desde la cámara frontal del smartphone.
+2. Crear una aplicación Android usando OpenCV que identifique la cantidad de dinero en pesos colombianos presente en una imagen.
+
+---
+
+# Tecnologías utilizadas
+
+- Kotlin
+- C++ (Android NDK)
+- OpenCV 4.12.0
+- CMake
+- Android Studio
+- Haar Cascade Classifier
+- Viola-Jones Face Detection
+- OpenCV JavaCamera2View
+
+---
+
+# Requisitos previos
 
 - Android Studio (versión reciente)
-- NDK (Side by side) — instalar desde **Tools > SDK Manager > SDK Tools**
-- CMake — instalar desde **Tools > SDK Manager > SDK Tools**
-- OpenCV Android SDK 4.12.0 — descargar desde [opencv.org/releases](https://opencv.org/releases/)
-- Dispositivo Android con cámara o emulador con cámara virtual
+- Android SDK
+- Android NDK (Side by side)
+- CMake 3.22.1+
+- OpenCV Android SDK 4.12.0
+- Celular Android con cámara o emulador compatible
 
 ---
 
-## Configuración del proyecto
+# Instalación
 
-### 1. Clonar el repositorio
+## 1. Clonar el repositorio
+
 ```bash
 git clone https://github.com/SebastianUrrego/Parcial1-Filtros-openCV.git
 ```
 
-### 2. Descargar OpenCV
-Descarga el **OpenCV Android SDK 4.12.0** desde la página oficial y descomprímelo en tu computadora, por ejemplo en:
-```
+---
+
+## 2. Descargar OpenCV
+
+Descargar el SDK oficial de OpenCV Android:
+
+https://opencv.org/releases/
+
+Descomprimirlo en una ruta como:
+
+```text
 C:/Users/TuNombre/Documents/opencv-4.12.0-android-sdk/
 ```
 
-### 3. Actualizar la ruta de OpenCV
-Abre el archivo `app/src/main/cpp/CMakeLists.txt` y actualiza la línea 6 con la ruta donde descomprimiste OpenCV:
+---
+
+## 3. Configurar OpenCV en CMake
+
+Abrir:
+
+```text
+app/src/main/cpp/CMakeLists.txt
+```
+
+Modificar la ruta:
+
 ```cmake
 set(OpenCV_DIR "C:/Users/TuNombre/Documents/opencv-4.12.0-android-sdk/OpenCV-android-sdk/sdk/native/jni")
 ```
-> **Importante:** Usa barras diagonales `/` y asegúrate que la ruta termine en `/sdk/native/jni`
 
-### 4. Sincronizar Gradle
-Haz clic en el ícono del **Elefante 🐘** (Sync Project with Gradle Files) y espera que termine sin errores.
-
-### 5. Ejecutar
-Conecta tu celular con **depuración USB activada** o usa un emulador, y presiona **Run ▶️**.
+> Importante: usar `/` y no `\`
 
 ---
+
+## 4. Sincronizar Gradle
+
+Presionar:
+
+```text
+Sync Project with Gradle Files
+```
+
+y esperar a que Android Studio termine la sincronización.
+
+---
+
+## 5. Ejecutar la aplicación
+
+- Activar depuración USB en el dispositivo
+- Conectar el celular
+- Presionar:
+
+```text
+Run ▶️
+```
+
+---
+
+# Funcionalidades implementadas
+
+# Punto 1 — Detección Facial con Viola-Jones
+
+Se implementó un sistema de detección facial en tiempo real usando:
+
+- Haar Cascade Classifier
+- Haar Features
+- Modelo Viola-Jones
+- Cámara frontal del smartphone
+- OpenCV CascadeClassifier
+
+La detección funciona en tiempo real utilizando la cámara del dispositivo Android.
+
+## Características
+
+- Detección facial en vivo
+- Soporte para cámara frontal y trasera
+- Procesamiento en tiempo real
+- Integración OpenCV + NDK
+- Renderizado a pantalla completa
+
+---
+
+# Punto 2 — Reconocimiento de monedas Colombianos
+
+La aplicación también permite detectar monedas colombianas presente en una imagen usando procesamiento digital de imágenes con OpenCV.
 
 ## Funcionalidades
 
-### Punto 1 — Integración OpenCV con C++
-La app integra OpenCV mediante **CMakeLists.txt** y código nativo en C++ (`native-lib.cpp`), cumpliendo el requisito de usar las librerías OpenCV en Android con NDK.
-
-### Punto 2 — Cámara en tiempo real
-- Accede a la cámara del smartphone usando `JavaCamera2View` de OpenCV
-- La imagen procesada se visualiza a pantalla completa
-- Soporta cambio entre **cámara trasera y delantera**
-
-### Punto 3 — Galería de fotos
-- Accede a la galería del dispositivo
-- Corrige automáticamente la rotación de las fotos (metadatos EXIF)
-- Muestra la imagen procesada a pantalla completa con `centerCrop`
-
-### Punto 4 — Filtros de procesamiento de imagen
-Se implementaron 4 modos aplicables tanto a la cámara en vivo como a imágenes de la galería:
-
-| # | Efecto | Descripción | Técnica OpenCV |
-|---|--------|-------------|----------------|
-| 0 | **Normal** | Sin filtro, imagen original | — |
-| 1 | **Sketch** | Boceto de bordes invertidos en blanco y negro | `cvtColor` + `Canny` + `bitwise_not` |
-| 2 | **Sepia** | Filtro de tono cálido vintage | `transform` con matriz de color 4x4 |
-| 3 | **Segmentación Verde** | Resalta solo los píxeles de color verde | `cvtColor HSV` + `inRange` + máscara |
+- Captura desde cámara
+- Selección desde galería
+- Procesamiento de imágenes
+- Detección de regiones de interés
+- Clasificación básica de billetes colombianos
 
 ---
 
-## Estructura del proyecto
+# Procesamiento de imágenes
 
+La aplicación incluye varios filtros implementados en C++ usando OpenCV.
+
+| # | Efecto | Descripción | Técnica OpenCV |
+|---|---|---|---|
+| 0 | Normal | Imagen original | — |
+| 1 | Sketch | Boceto blanco y negro | `Canny + bitwise_not` |
+| 2 | Sepia | Efecto cálido vintage | `transform()` |
+| 3 | Segmentación Verde | Detecta color verde | `HSV + inRange()` |
+
+---
+
+# Filtros implementados
+
+## Sketch
+
+Convierte la imagen a escala de grises y detecta bordes usando el algoritmo de Canny.
+
+```cpp
+cvtColor(src, gray, COLOR_BGR2GRAY);
+Canny(gray, edges, 80, 150);
+bitwise_not(edges, dst);
 ```
+
+---
+
+## Sepia
+
+Aplica una transformación de color usando una matriz 4x4.
+
+```cpp
+transform(src, dst, sepiaKernel);
+```
+
+---
+
+## Segmentación Verde
+
+Convierte la imagen al espacio HSV y aplica una máscara.
+
+```cpp
+cvtColor(src, hsv, COLOR_BGR2HSV);
+inRange(hsv, lowerGreen, upperGreen, mask);
+```
+
+---
+
+# Estructura del proyecto
+
+```text
 app/
 ├── src/
 │   ├── main/
 │   │   ├── cpp/
-│   │   │   ├── CMakeLists.txt        # Configuración de compilación C++
-│   │   │   └── native-lib.cpp        # Lógica de filtros con OpenCV en C++
+│   │   │   ├── CMakeLists.txt
+│   │   │   └── native-lib.cpp
 │   │   ├── java/
-│   │   │   └── MainActivity.kt       # Actividad principal en Kotlin
+│   │   │   └── MainActivity.kt
 │   │   └── res/
 │   │       └── layout/
-│   │           └── activity_main.xml # Interfaz de usuario
+│   │           └── activity_main.xml
 ```
 
 ---
 
-## Uso de la app
+# Uso de la aplicación
 
 | Botón | Función |
-|-------|---------|
-| **CAM/GAL** | Alterna entre la cámara en vivo y la galería de fotos |
-| **GIRAR CAM** | Cambia entre cámara trasera y delantera |
-| **FILTRO** | Cicla entre los efectos: Normal → Sketch → Sepia → Verde |
+|---|---|
+| CAM/GAL | Alterna entre cámara y galería |
+| GIRAR CAM | Cambia entre cámara frontal y trasera |
+| FILTRO | Cambia entre filtros |
 
 ---
 
-## Filtros implementados en C++
-
-### Sketch (Efecto Boceto)
-Convierte la imagen a escala de grises, detecta bordes con el algoritmo de Canny e invierte los colores para lograr un efecto de dibujo a lápiz.
-
-### Sepia (Filtro Cálido)
-Aplica una matriz de transformación de color 4x4 que mezcla los canales RGB para producir tonos cálidos marrones y dorados característicos de las fotos antiguas.
-
-### Segmentación de Color Verde
-Convierte la imagen al espacio de color HSV, aplica una máscara con `inRange` para aislar solo los píxeles dentro del rango de verde, y muestra únicamente esos píxeles sobre fondo negro.
-
----
-
-## Dependencias
+# Dependencias
 
 ```kotlin
 implementation("androidx.exifinterface:exifinterface:1.3.7")
 ```
+
+Además:
+
 - OpenCV Android SDK 4.12.0
-- Android NDK (C++)
-- CMake 3.22.1+
+- Android NDK
+- CMake
 
 ---
 
-## Autores
-**Bryan Ariza & Sebastian Urrego**
-Computer Vision - IELC 5818
+# Conceptos utilizados
+
+## Haar Features
+
+Método basado en diferencias de intensidad entre regiones claras y oscuras.
+
+## Viola-Jones
+
+Algoritmo de detección de objetos en tiempo real basado en:
+
+- Haar Features
+- Imagen Integral
+- AdaBoost
+- Cascade Classifier
+
+## OpenCV
+
+Biblioteca de visión por computador usada para:
+
+- Procesamiento de imágenes
+- Detección facial
+- Segmentación
+- Conversión de color
+- Captura de cámara
+
+---
+
+# Resultados
+
+- Integración exitosa de OpenCV con Android NDK
+- Procesamiento en tiempo real
+- Detección facial funcional
+- Aplicación estable en Android
+- Uso de C++ para acelerar procesamiento
+
+---
+
+# Autores
+
+**Bryan Ariza & Sebastian Urrego**  
+Computer Vision - IELC 5818  
 Universidad Sergio Arboleda
