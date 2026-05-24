@@ -273,26 +273,29 @@ Java_com_bryan_1lunay_opencv_1parcial_MainActivity_processImageNative(
     GaussianBlur(gray, blurred, Size(9, 9), 2.0);
     medianBlur(blurred, blurred, 5);
 
-    // PASO 2: HoughCircles — rango amplio (3% a 50% del ancho)
-    // para detectar monedas sin importar la distancia de la cámara.
-    int minR = (int)(rgba.cols * 0.03f);
-    int maxR = (int)(rgba.cols * 0.50f);
+    // PASO 2: HoughCircles — rango ajustado (5% a 35% del ancho)
+    // minR más alto elimina objetos pequeños (tornillos, botones).
+    // maxR más bajo elimina objetos grandes (platos, tapas, marcos).
+    int minR = (int)(rgba.cols * 0.05f);
+    int maxR = (int)(rgba.cols * 0.35f);
 
     vector<Vec3f> rawCircles;
     HoughCircles(
         blurred, rawCircles, HOUGH_GRADIENT, 1.5,
-        rgba.cols * 0.06f, // minDist entre centros
+        rgba.cols * 0.10f, // minDist entre centros (más grande → evita doble detección en bimetálicas)
         100,               // param1 (Canny)
-        85, // param2 (acumulador) — exige círculos bien formados
+        115, // param2 (acumulador) — más alto = exige círculos mejor formados, menos falsos positivos
         minR, maxR);
 
     // PASO 3: NMS — eliminar duplicados solapados
+    // Threshold reducido a 0.40 para filtrado más agresivo:
+    // evita que el anillo interno de una bimetálica cuente como segunda moneda.
     vector<Vec3f> coins;
     for (const auto &c : rawCircles) {
       bool keep = true;
       for (const auto &a : coins) {
         float d = hypot(c[0] - a[0], c[1] - a[1]);
-        if (d < (c[2] + a[2]) * 0.55f) {
+        if (d < (c[2] + a[2]) * 0.40f) {
           keep = false;
           break;
         }
@@ -335,10 +338,12 @@ Java_com_bryan_1lunay_opencv_1parcial_MainActivity_processImageNative(
       double avgS = (cS + eS) / 2.0;
       double avgH = (cH + eH) / 2.0;
 
-      // Exigimos Hue estricto (10-40) y Saturación >25 para evitar que
-      // reflejos amarillos en monedas plateadas ($200) las confundan con doradas.
+      // isGold: solo monedas de latón/bronce REAL (familia vieja: $50 y $100 viejas).
+      // $100 nueva y $200 son ACERO/ALPACA → plateadas, NO doradas.
+      // Subimos avgS > 40 y estrechamos Hue (12–38) para evitar falsos positivos
+      // causados por reflejos amarillos en iluminación cálida sobre monedas plateadas.
       bool isGold =
-          (!is500 && !is1000 && avgS > 25.0 && avgH > 10.0 && avgH < 40.0);
+          (!is500 && !is1000 && avgS > 40.0 && avgH > 12.0 && avgH < 38.0);
 
       detected.push_back({cx, cy, r, cS, eS, cH, eH, is500, is1000, isGold});
     }
@@ -412,21 +417,29 @@ Java_com_bryan_1lunay_opencv_1parcial_MainActivity_processImageNative(
       float dia = (r * 2.0f) / px_to_mm;
 
       if (isGold_) {
-        // Doradas: $100 vieja (23.0 mm), $50 vieja (21.0 mm), $100 nueva (20.3 mm)
+        // Doradas reales: solo familia vieja de latón/bronce.
+        //   $100 vieja: 23.0 mm
+        //   $50  vieja: 21.0 mm
+        // NOTA: $100 nueva es acero plateado → va en la rama de abajo.
+        // Punto medio $50v/$100v = (21.0+23.0)/2 = 22.0 mm → umbral correcto.
         if (dia > 22.0f)
-          bestVal = 100L; // 23.0 mm
-        else if (dia > 19.0f)
-          bestVal = 100L; // Agrupa 20.3 mm (nueva) y 21.0 mm (50 vieja)
+          bestVal = 100L; // $100 vieja (23.0 mm)
         else
-          bestVal = 50L;
+          bestVal = 50L;  // $50  vieja (21.0 mm) — cualquier dorada < 22 mm
       } else {
-        // Plateadas: $200 vieja (24.4 mm), $200 nueva (22.4 mm), $50 nueva (17.0 mm)
+        // Plateadas/Acero: toda la familia nueva + $200 vieja.
+        //   $200 vieja: 24.4 mm
+        //   $200 nueva: 22.4 mm  ─┐ punto medio con $100: (20.3+22.4)/2 = 21.35 mm
+        //   $100 nueva: 20.3 mm  ─┘ punto medio con $50:  (17.0+20.3)/2 = 18.65 mm
+        //   $50  nueva: 17.0 mm
         if (dia > 23.4f)
-          bestVal = 200L; // 24.4 mm vieja
-        else if (dia > 20.0f)
-          bestVal = 200L; // 22.4 mm nueva
+          bestVal = 200L; // $200 vieja (24.4 mm)
+        else if (dia > 21.35f)
+          bestVal = 200L; // $200 nueva (22.4 mm)
+        else if (dia > 18.65f)
+          bestVal = 100L; // $100 nueva (20.3 mm) — AHORA en rama plateada
         else
-          bestVal = 50L; // 17.0 mm
+          bestVal = 50L;  // $50  nueva (17.0 mm)
       }
 
       string lbl = "$" + to_string(bestVal);
@@ -461,13 +474,37 @@ Java_com_bryan_1lunay_opencv_1parcial_MainActivity_processImageNative(
       string lbl = res.second;
       Scalar col = getColor(val);
 
-      circle(rgba, Point(coin.cx, coin.cy), coin.r, col, 3);
+      // ── Diámetro calculado en mm (para debug/calibración) ──────────
+      float dia_mm = (coin.r * 2.0f) / px_to_mm;
+      // Formateamos a 1 decimal: "22.4mm"
+      char diaBuf[16];
+      snprintf(diaBuf, sizeof(diaBuf), "%.1fmm", dia_mm);
+
+      // Color de borde: amarillo si isGold, blanco si plateada
+      Scalar borderCol = coin.isGold ? Scalar(0, 230, 255, 255)   // amarillo → dorada
+                                     : Scalar(220, 220, 220, 255); // blanco  → plateada
+
+      circle(rgba, Point(coin.cx, coin.cy), coin.r, borderCol, 3);
       circle(rgba, Point(coin.cx, coin.cy), 5, col, FILLED);
 
-      putText(rgba, lbl, Point(coin.cx - coin.r / 2, coin.cy + 6),
+      // Línea 1: valor clasificado  (ej: "$200")
+      int txtX = coin.cx - coin.r / 2;
+      putText(rgba, lbl, Point(txtX, coin.cy - 4),
               FONT_HERSHEY_SIMPLEX, 0.75, Scalar(0, 0, 0, 255), 4);
-      putText(rgba, lbl, Point(coin.cx - coin.r / 2, coin.cy + 6),
+      putText(rgba, lbl, Point(txtX, coin.cy - 4),
               FONT_HERSHEY_SIMPLEX, 0.75, col, 2);
+
+      // Línea 2: diámetro calculado (ej: "22.4mm") — para calibración
+      putText(rgba, diaBuf, Point(txtX, coin.cy + 22),
+              FONT_HERSHEY_SIMPLEX, 0.60, Scalar(0, 0, 0, 255), 3);
+      putText(rgba, diaBuf, Point(txtX, coin.cy + 22),
+              FONT_HERSHEY_SIMPLEX, 0.60, Scalar(0, 255, 200, 255), 1);
+
+      // Log para Logcat: valor | dia_mm | S_centro | S_borde | isGold
+      LOGD("COIN: %s | dia=%.1fmm | cS=%.1f eS=%.1f | isGold=%d is500=%d is1000=%d",
+           lbl.c_str(), dia_mm,
+           (float)coin.cS, (float)coin.eS,
+           (int)coin.isGold, (int)coin.is500, (int)coin.is1000);
 
       if (val > 0) {
         total += val;
