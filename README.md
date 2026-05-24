@@ -132,18 +132,19 @@ La detección funciona en tiempo real utilizando la cámara del dispositivo Andr
 
 ---
 
-# Punto 2 — Reconocimiento de monedas Colombianos
+# Punto 2 — Detección y Clasificación de Monedas Colombianas
 
-La aplicación también permite detectar monedas colombianas presente en una imagen usando procesamiento digital de imágenes con OpenCV.
+La aplicación cuenta con un algoritmo avanzado implementado en C++ (NDK) para detectar, medir y clasificar monedas colombianas en tiempo real utilizando procesamiento digital de imágenes con OpenCV.
 
-## Funcionalidades
+## Funcionalidades y Flujo de Procesamiento
 
-- Captura desde cámara
-- Selección desde galería
-- Procesamiento de imágenes
-- Detección de regiones de interés
-- Clasificación básica de billetes colombianos
-
+1. **Detección de Círculos:** Uso de `HoughCircles` con parámetros ajustados para evitar falsos positivos y filtrado Non-Maximum Suppression (NMS) para descartar superposiciones.
+2. **Análisis de Color (HSV):** Extracción del color en el centro exacto de la moneda para determinar si es **dorada** (bronce/latón) o **plateada** (alpaca/acero). Es robusto ante reflejos de iluminación amarilla del ambiente.
+3. **Monedas Bimetálicas:** Detecta contraste entre el anillo exterior y el centro para encontrar directamente las monedas de $500 y $1000.
+4. **Escala Relativa:** Utiliza las monedas de $500 y $1000 como "anclas" físicas (ya que tienen el mismo tamaño en familias nuevas y viejas) para calcular la escala exacta de píxeles a milímetros (`px_to_mm`).
+5. **Clasificación por Diámetro Real:**
+   - **Rama Dorada:** `$100 antigua (23.0 mm)`, `$100 nueva (20.3 mm)`, `$50 antigua (20.0 mm)`.
+   - **Rama Plateada:** `$200 antigua (24.4 mm)`, `$200 nueva (22.4 mm)`, `$50 nueva (17.0 mm)`.
 ---
 
 # Procesamiento de imágenes
@@ -156,6 +157,8 @@ La aplicación incluye varios filtros implementados en C++ usando OpenCV.
 | 1 | Sketch | Boceto blanco y negro | `Canny + bitwise_not` |
 | 2 | Sepia | Efecto cálido vintage | `transform()` |
 | 3 | Segmentación Verde | Detecta color verde | `HSV + inRange()` |
+| 4 | Detección de Rostros | Detección facial Viola-Jones | `detectMultiScale()` |
+| 5 | Detector de Monedas | Clasifica monedas y suma total | `HoughCircles + HSV` |
 
 ---
 
