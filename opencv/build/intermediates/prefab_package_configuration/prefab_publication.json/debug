@@ -12,12 +12,36 @@
         "moduleExportLibraries": [],
         "abis": [
           {
+            "abiName": "armeabi-v7a",
+            "abiApi": 21,
+            "abiNdkMajor": 27,
+            "abiStl": "c++_shared",
+            "abiLibrary": "C:\\Users\\user\\OneDrive\\Escritorio\\UNIVERSIDAD\\semestre 8\\parcial corte1 vision\\opencv\\.cxx\\Debug\\1s2h1u5w\\armeabi-v7a\\libopencv_jni_shared.a",
+            "abiAndroidGradleBuildJsonFile": "C:\\Users\\user\\OneDrive\\Escritorio\\UNIVERSIDAD\\semestre 8\\parcial corte1 vision\\opencv\\.cxx\\Debug\\1s2h1u5w\\armeabi-v7a\\android_gradle_build.json"
+          },
+          {
             "abiName": "arm64-v8a",
             "abiApi": 21,
             "abiNdkMajor": 27,
             "abiStl": "c++_shared",
             "abiLibrary": "C:\\Users\\user\\OneDrive\\Escritorio\\UNIVERSIDAD\\semestre 8\\parcial corte1 vision\\opencv\\.cxx\\Debug\\1s2h1u5w\\arm64-v8a\\libopencv_jni_shared.a",
             "abiAndroidGradleBuildJsonFile": "C:\\Users\\user\\OneDrive\\Escritorio\\UNIVERSIDAD\\semestre 8\\parcial corte1 vision\\opencv\\.cxx\\Debug\\1s2h1u5w\\arm64-v8a\\android_gradle_build.json"
+          },
+          {
+            "abiName": "x86",
+            "abiApi": 21,
+            "abiNdkMajor": 27,
+            "abiStl": "c++_shared",
+            "abiLibrary": "C:\\Users\\user\\OneDrive\\Escritorio\\UNIVERSIDAD\\semestre 8\\parcial corte1 vision\\opencv\\.cxx\\Debug\\1s2h1u5w\\x86\\libopencv_jni_shared.a",
+            "abiAndroidGradleBuildJsonFile": "C:\\Users\\user\\OneDrive\\Escritorio\\UNIVERSIDAD\\semestre 8\\parcial corte1 vision\\opencv\\.cxx\\Debug\\1s2h1u5w\\x86\\android_gradle_build.json"
+          },
+          {
+            "abiName": "x86_64",
+            "abiApi": 21,
+            "abiNdkMajor": 27,
+            "abiStl": "c++_shared",
+            "abiLibrary": "C:\\Users\\user\\OneDrive\\Escritorio\\UNIVERSIDAD\\semestre 8\\parcial corte1 vision\\opencv\\.cxx\\Debug\\1s2h1u5w\\x86_64\\libopencv_jni_shared.a",
+            "abiAndroidGradleBuildJsonFile": "C:\\Users\\user\\OneDrive\\Escritorio\\UNIVERSIDAD\\semestre 8\\parcial corte1 vision\\opencv\\.cxx\\Debug\\1s2h1u5w\\x86_64\\android_gradle_build.json"
           }
         ]
       }

@@ -54,6 +54,7 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
     private external fun processImageNative(matAddrRgba: Long, effectMode: Int)
     private external fun initFaceCascade(cascadePath: String)
     private external fun getDetectedAmount(): Long
+    private external fun calibrateCoins(assetManager: android.content.res.AssetManager)
 
     companion object {
         init {
@@ -87,6 +88,9 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
         if (cascadePath != null) {
             initFaceCascade(cascadePath)
         }
+
+        // Calibrar radios de monedas usando las imágenes de referencia en assets
+        calibrateCoins(assets)
 
         // Verificar/pedir permiso de cámara
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
@@ -157,6 +161,8 @@ class MainActivity : AppCompatActivity(), CameraBridgeViewBase.CvCameraViewListe
 
             // En modo galería, reaplicar efecto inmediatamente
             if (!isCameraMode && currentGalleryImage != null) {
+                applyEffectToGalleryImage()
+            }
         }
     }
 
