@@ -282,14 +282,12 @@ Java_com_bryan_1lunay_opencv_1parcial_MainActivity_processImageNative(
     vector<Vec3f> rawCircles;
     HoughCircles(
         blurred, rawCircles, HOUGH_GRADIENT, 1.5,
-        rgba.cols * 0.10f, // minDist entre centros (más grande → evita doble detección en bimetálicas)
-        100,               // param1 (Canny)
-        115, // param2 (acumulador) — más alto = exige círculos mejor formados, menos falsos positivos
+        rgba.cols * 0.10f,
+        100,
+        115,
         minR, maxR);
 
-    // PASO 3: NMS — eliminar duplicados solapados
-    // Threshold reducido a 0.40 para filtrado más agresivo:
-    // evita que el anillo interno de una bimetálica cuente como segunda moneda.
+    // PASO 3: NMS
     vector<Vec3f> coins;
     for (const auto &c : rawCircles) {
       bool keep = true;
@@ -323,6 +321,7 @@ Java_com_bryan_1lunay_opencv_1parcial_MainActivity_processImageNative(
           cy + r >= rgba.rows)
         continue;
 
+      // Restaurado a 0.40 y 0.90 para que las bimetálicas ($500 y $1000) detecten su anillo.
       HSVStats cen = getRingHSV(rgba, cx, cy, r, 0.00f, 0.40f);
       HSVStats edg = getRingHSV(rgba, cx, cy, r, 0.68f, 0.90f);
       double cS = cen.S, eS = edg.S;
@@ -339,11 +338,14 @@ Java_com_bryan_1lunay_opencv_1parcial_MainActivity_processImageNative(
       double avgH = (cH + eH) / 2.0;
 
       // isGold: solo monedas de latón/bronce REAL (familia vieja: $50 y $100 viejas).
-      // $100 nueva y $200 son ACERO/ALPACA → plateadas, NO doradas.
-      // Subimos avgS > 40 y estrechamos Hue (12–38) para evitar falsos positivos
-      // causados por reflejos amarillos en iluminación cálida sobre monedas plateadas.
+      // isGold: monedas doradas (bronce/latón).
+      // $100 (vieja y nueva) y $50 (vieja) son doradas.
+      // $200 y $50 nueva son plateadas (alpaca/acero).
+      // AUMENTAMOS la saturación a 50.0: bajo luz amarilla, una moneda plateada
+      // puede reflejar luz amarilla, pero su saturación será baja (20-40).
+      // Solo las monedas realmente doradas tendrán saturación > 50.
       bool isGold =
-          (!is500 && !is1000 && avgS > 40.0 && avgH > 12.0 && avgH < 38.0);
+          (!is500 && !is1000 && avgS > 50.0 && avgH > 10.0 && avgH < 45.0);
 
       detected.push_back({cx, cy, r, cS, eS, cH, eH, is500, is1000, isGold});
     }
@@ -380,28 +382,15 @@ Java_com_bryan_1lunay_opencv_1parcial_MainActivity_processImageNative(
         px_to_mm = sum / cnt;
     }
     if (px_to_mm < 0) {
-      // Fallback: usar mediana de radios y estimar por proporción de pantalla
-      vector<int> rs;
-      for (const auto &coin : detected)
-        rs.push_back(coin.r);
-      sort(rs.begin(), rs.end());
-      int med = rs[rs.size() / 2];
-      float ratio = (float)med / rgba.cols;
-      float assumed;
-      // Tamaños exactos de ambas familias (Banco de la República)
-      if (ratio > 0.15f)
-        assumed = 13.35f; // $1000 (26.7 mm)
-      else if (ratio > 0.12f)
-        assumed = 12.20f; // $200 vieja (24.4 mm)
-      else if (ratio > 0.09f)
-        assumed = 11.85f; // $500 (23.7 mm)
-      else if (ratio > 0.07f)
-        assumed = 11.20f; // $200 nueva (22.4 mm)
-      else if (ratio > 0.05f)
-        assumed = 10.15f; // $100 nueva (20.3 mm)
-      else
-        assumed = 8.50f; // $50 nueva (17.0 mm)
-      px_to_mm = (float)med / assumed;
+      // Fallback: Si no hay monedas bimetálicas ($500 o $1000) para anclar la escala,
+      // es imposible saber físicamente a qué distancia está la cámara.
+      // En lugar de "adivinar" forzando el tamaño en escalones (lo que causa que una
+      // $200 salte a $100 al mover un poco la cámara), asumimos una distancia nominal
+      // (ej. un campo visual de 140 mm de ancho).
+      // Al hacer esto, la escala es constante. El usuario verá en pantalla cómo el diámetro 
+      // calculado cambia suavemente al acercar o alejar el celular, permitiéndole ajustar 
+      // la distancia de forma natural hasta que la moneda marque su tamaño real.
+      px_to_mm = rgba.cols / 140.0f;
     }
 
     // PASO 6: Clasificar cada moneda por color y diámetro físico calculado
@@ -417,29 +406,31 @@ Java_com_bryan_1lunay_opencv_1parcial_MainActivity_processImageNative(
       float dia = (r * 2.0f) / px_to_mm;
 
       if (isGold_) {
-        // Doradas reales: solo familia vieja de latón/bronce.
-        //   $100 vieja: 23.0 mm
-        //   $50  vieja: 21.0 mm
-        // NOTA: $100 nueva es acero plateado → va en la rama de abajo.
-        // Punto medio $50v/$100v = (21.0+23.0)/2 = 22.0 mm → umbral correcto.
-        if (dia > 22.0f)
-          bestVal = 100L; // $100 vieja (23.0 mm)
+        // Monedas DORADAS:
+        // - $100 vieja: 23.0 mm
+        // - $100 nueva: 20.3 mm
+        // - $50  vieja: 20.0 mm
+        // Usamos ramas por color porque dan una tolerancia gigante a la distancia.
+        // Todo lo que sea > 21.65 será la 100 vieja, sin importar si mide 22 o 25.
+        if (dia > 21.65f)
+          bestVal = 100L; // 23.0 mm ($100 vieja)
+        else if (dia > 20.15f)
+          bestVal = 100L; // 20.3 mm ($100 nueva)
+        else if (dia > 18.5f)
+          bestVal = 50L;  // 20.0 mm ($50 vieja)
         else
-          bestVal = 50L;  // $50  vieja (21.0 mm) — cualquier dorada < 22 mm
+          bestVal = 50L;  // < 18.5 mm ($50 nueva que entró por error de color)
       } else {
-        // Plateadas/Acero: toda la familia nueva + $200 vieja.
-        //   $200 vieja: 24.4 mm
-        //   $200 nueva: 22.4 mm  ─┐ punto medio con $100: (20.3+22.4)/2 = 21.35 mm
-        //   $100 nueva: 20.3 mm  ─┘ punto medio con $50:  (17.0+20.3)/2 = 18.65 mm
-        //   $50  nueva: 17.0 mm
+        // Monedas PLATEADAS:
+        // - $200 vieja: 24.4 mm
+        // - $200 nueva: 22.4 mm
+        // - $50  nueva: 17.0 mm
         if (dia > 23.4f)
-          bestVal = 200L; // $200 vieja (24.4 mm)
-        else if (dia > 21.35f)
-          bestVal = 200L; // $200 nueva (22.4 mm)
-        else if (dia > 18.65f)
-          bestVal = 100L; // $100 nueva (20.3 mm) — AHORA en rama plateada
+          bestVal = 200L; // 24.4 mm ($200 vieja)
+        else if (dia > 19.7f)
+          bestVal = 200L; // 22.4 mm ($200 nueva)
         else
-          bestVal = 50L;  // $50  nueva (17.0 mm)
+          bestVal = 50L;  // 17.0 mm ($50 nueva)
       }
 
       string lbl = "$" + to_string(bestVal);
