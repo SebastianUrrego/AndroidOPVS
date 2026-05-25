@@ -39,15 +39,20 @@ Java_com_bryan_1lunay_opencv_1parcial_MainActivity_calibrateCoins(
     long val;
     string file;
   };
+  // Radios medidos experimentalmente en imágenes 1200×1600 px (escala ~7.1 px/mm):
+  //   $50 nueva: 61px | $100 nueva: 71px | $100 vieja: 84px
+  //   $200 nueva: 82px | $200 vieja: 89px | $500 nueva: 83px
+  //   $500 vieja: 86px | $1000: 95px  → rango: 61–95 px (5.1%–7.9% del ancho)
+  // NOTA: 50_vieja_frente/trasera.jpeg no están disponibles en assets/
   vector<AssetDef> assets = {
-      {1000, "1000_frente.jpeg"},     {1000, "1000_trasera.jpeg"},
-      {500, "500_nueva_frente.jpeg"}, {500, "500_nueva_trasera.jpeg"},
-      {200, "200_nueva_frente.jpeg"}, {200, "200_nueva_trasera.jpeg"},
-      {200, "200_vieja_frente.jpeg"}, {200, "200_vieja_trasera.jpeg"},
-      {100, "100_nueva_frente.jpeg"}, {100, "100_nueva_trasera.jpeg"},
-      {100, "100_vieja_frente.jpeg"}, {100, "100_vieja_trasera.jpeg"},
-      {50, "50_nueva_frente.jpeg"},   {50, "50_nueva_trasera.jpeg"},
-      {50, "50_vieja_frente.jpeg"},   {50, "50_vieja_trasera.jpeg"}};
+      {1000, "1000_frente.jpeg"},       {1000, "1000_trasera.jpeg"},
+      {500,  "500_nueva_frente.jpeg"},  {500,  "500_nueva_trasera.jpeg"},
+      {500,  "500_vieja_frente.jpeg"},  {500,  "500_vieja_trasera.jpeg"},
+      {200,  "200_nueva_frente.jpeg"},  {200,  "200_nueva_trasera.jpeg"},
+      {200,  "200_vieja_frente.jpeg"},  {200,  "200_vieja_trasera.jpeg"},
+      {100,  "100_nueva_frente.jpeg"},  {100,  "100_nueva_trasera.jpeg"},
+      {100,  "100_vieja_frente.jpeg"},  {100,  "100_vieja_trasera.jpeg"},
+      {50,   "50_nueva_frente.jpeg"},   {50,   "50_nueva_trasera.jpeg"}};
 
   g_calibratedCoins.clear();
 
@@ -78,8 +83,11 @@ Java_com_bryan_1lunay_opencv_1parcial_MainActivity_calibrateCoins(
     GaussianBlur(gray, blurred, Size(9, 9), 2.0);
     medianBlur(blurred, blurred, 5);
 
-    int minR = (int)(img.cols * 0.03f);
-    int maxR = (int)(img.cols * 0.50f);
+    // Rango ajustado a los radios reales medidos en imágenes de referencia 1200px:
+    //   mínimo: 61px ($50 nueva, 17mm) = 5.1% → se usa 5% con margen 2px
+    //   máximo: 95px ($1000, 26.7mm)   = 7.9% → se usa 9% para incluir variaciones
+    int minR = (int)(img.cols * 0.05f);
+    int maxR = (int)(img.cols * 0.09f);
 
     vector<Vec3f> circles;
     HoughCircles(blurred, circles, HOUGH_GRADIENT, 1.5, img.cols * 0.06f, 100,
@@ -273,11 +281,13 @@ Java_com_bryan_1lunay_opencv_1parcial_MainActivity_processImageNative(
     GaussianBlur(gray, blurred, Size(9, 9), 2.0);
     medianBlur(blurred, blurred, 5);
 
-    // PASO 2: HoughCircles — rango ajustado (5% a 35% del ancho)
-    // minR más alto elimina objetos pequeños (tornillos, botones).
-    // maxR más bajo elimina objetos grandes (platos, tapas, marcos).
-    int minR = (int)(rgba.cols * 0.05f);
-    int maxR = (int)(rgba.cols * 0.35f);
+    // PASO 2: HoughCircles — rango calculado a partir de radios medidos experimentalmente
+    // Referencia (imgs 1200px, ~7.1 px/mm): $50 nueva=61px…$1000=95px (5.1%–7.9%)
+    // minR=4% cubre monedas a ~25% más lejos que la distancia de referencia (~40 cm).
+    // maxR=30% cubre monedas a ~4x más cerca que la referencia (~8 cm, máximo práctico).
+    // param2=115 estricto: reduce falsos positivos sobre superficies texturizadas.
+    int minR = (int)(rgba.cols * 0.04f);
+    int maxR = (int)(rgba.cols * 0.30f);
 
     vector<Vec3f> rawCircles;
     HoughCircles(
